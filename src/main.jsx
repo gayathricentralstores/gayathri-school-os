@@ -35,6 +35,8 @@ import {
   X,
 } from 'lucide-react';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
+import ParentPortalPage from './features/parent/ParentPortalPage';
+import AIAssistantPage from './features/ai/AIAssistantPage';
 import './index.css';
 
 const portals = [
@@ -46,6 +48,8 @@ const portals = [
   { key: 'transport', label: 'Transport', icon: BusFront, accessKey: 'transport' },
   { key: 'communication', label: 'Communication', icon: Megaphone, accessKey: 'communication' },
   { key: 'exams', label: 'Exams & Reports', icon: Award, accessKey: 'exams' },
+  { key: 'parentApp', label: 'Parent App', icon: UserRound, accessKey: 'parents' },
+  { key: 'aiAssistant', label: 'AI Assistant', icon: Sparkles, accessKey: 'academics' },
   { key: 'roles', label: 'Role Access', icon: LockKeyhole, superAdminOnly: true },
   { key: 'imports', label: 'Imports', icon: Upload, superAdminOnly: true },
 ];
@@ -1163,6 +1167,8 @@ function AppShell({ session }) {
     : active === 'transport' ? <TransportPage routes={routes} stops={stops} students={students} />
     : active === 'communication' ? <CommunicationPage students={students} fees={fees} routes={routes} />
     : active === 'exams' ? <ExamsPage students={students} />
+    : active === 'parentApp' ? <ParentPortalPage students={students} fees={fees} routes={routes} stops={stops} />
+    : active === 'aiAssistant' ? <AIAssistantPage students={students} />
     : active === 'roles' ? <RolesPage roles={roles} roleAccess={roleAccess} onToggleAccess={updateRoleAccess} savingAccess={savingAccess} />
     : active === 'imports' ? <ImportsPage imports={imports} />
     : <CommandCenterPage counts={counts} students={students} fees={fees} routes={routes} stops={stops} />;

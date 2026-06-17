@@ -265,3 +265,51 @@ td span { display:block; color:var(--muted); font-size:12px; margin-top:3px; }
 .sidebar nav button:nth-child(8) { --tab-accent:#a855f7; }
 .sidebar nav button:nth-child(9) { --tab-accent:#ef4444; }
 .sidebar nav button:nth-child(10) { --tab-accent:#64748b; }
+
+/* Batch 9.5 + 10 + 11: Modular parent app + AI academic assistant */
+.parent-layout { display:grid; grid-template-columns:minmax(320px, 430px) 1fr; gap:18px; align-items:start; }
+.parent-phone-shell { border:1px solid var(--line); background:linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, transparent), var(--panel)); border-radius:38px; padding:18px; box-shadow:var(--shadow); max-width:430px; }
+.parent-phone-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.parent-phone-top p { margin:0; font-size:12px; text-transform:uppercase; letter-spacing:.14em; color:var(--muted); font-weight:900; }
+.parent-phone-top strong { font-size:30px; letter-spacing:-.06em; }
+.parent-avatar { width:48px; height:48px; border-radius:18px; display:grid; place-items:center; background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; font-weight:950; box-shadow:0 14px 36px color-mix(in srgb, var(--accent) 26%, transparent); }
+.parent-child-card { border:1px solid var(--line); background:var(--panel-2); border-radius:28px; padding:16px; display:grid; gap:12px; }
+.parent-child-card span, .parent-metric span { display:block; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.14em; font-weight:900; }
+.parent-child-card h2 { font-size:28px; margin:6px 0 4px; }
+.parent-child-card p { margin:0; }
+.parent-card-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; }
+.parent-metric { border:1px solid var(--line); background:var(--panel); border-radius:22px; padding:15px; position:relative; overflow:hidden; }
+.parent-metric:after { content:""; position:absolute; width:90px; height:90px; right:-32px; bottom:-38px; border-radius:999px; background:color-mix(in srgb, var(--accent) 14%, transparent); filter:blur(8px); }
+.parent-metric.warm:after { background:color-mix(in srgb, var(--accent-2) 18%, transparent); }
+.parent-metric.secure:after { background:color-mix(in srgb, var(--accent) 20%, transparent); }
+.parent-metric strong { display:block; position:relative; z-index:1; font-size:26px; letter-spacing:-.06em; margin-top:8px; }
+.parent-metric p { position:relative; z-index:1; margin:4px 0 0; font-size:12px; }
+.parent-section-card { border:1px solid var(--line); background:var(--panel-2); border-radius:28px; padding:16px; margin-top:12px; }
+.parent-section-head { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.parent-section-head svg { color:var(--accent); }
+.parent-section-head strong { display:block; }
+.parent-section-head span { color:var(--muted); font-size:13px; }
+.parent-timeline { display:grid; gap:0; margin:4px 0 12px; }
+.parent-timeline-row { display:grid; grid-template-columns:24px 1fr; gap:10px; min-height:54px; position:relative; }
+.parent-timeline-row:before { content:""; position:absolute; left:7px; top:20px; bottom:-20px; width:2px; background:var(--line); }
+.parent-timeline-row:last-child:before { display:none; }
+.parent-dot { width:16px; height:16px; border-radius:999px; background:var(--panel); border:3px solid var(--line); margin-top:2px; position:relative; z-index:1; }
+.parent-timeline-row.current .parent-dot { background:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, #fff); box-shadow:0 0 0 8px color-mix(in srgb, var(--accent) 14%, transparent); }
+.parent-timeline-row strong { display:block; }
+.parent-timeline-row span { color:var(--muted); font-size:13px; }
+.parent-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ai-control-panel .drawer-actions { margin-top:16px; }
+.ai-os-page .table-shell td span { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+.sidebar nav button:nth-child(9) { --tab-accent:#22c55e; }
+.sidebar nav button:nth-child(10) { --tab-accent:#0ea5e9; }
+.sidebar nav button:nth-child(11) { --tab-accent:#8b5cf6; }
+.sidebar nav button.active { box-shadow:inset 3px 0 0 var(--tab-accent, var(--accent)); }
+
+@media (max-width: 1120px) {
+  .parent-layout { grid-template-columns:1fr; }
+  .parent-phone-shell { max-width:none; }
+}
+@media (max-width: 620px) {
+  .parent-card-grid, .parent-actions { grid-template-columns:1fr; }
+  .parent-phone-top strong { font-size:24px; }
+}
