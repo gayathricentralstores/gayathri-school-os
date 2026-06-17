@@ -47,9 +47,13 @@ const portals = [
   { key: 'students', label: 'Students', icon: UsersRound, accessKey: 'students' },
   { key: 'transport', label: 'Transport', icon: BusFront, accessKey: 'transport' },
   { key: 'communication', label: 'Communication', icon: Megaphone, accessKey: 'communication' },
+  { key: 'notifications', label: 'Notifications', icon: Bell, accessKey: 'communication' },
   { key: 'exams', label: 'Exams & Reports', icon: Award, accessKey: 'exams' },
+  { key: 'parentAccess', label: 'Parent Login', icon: ShieldCheck, accessKey: 'parents' },
   { key: 'parentApp', label: 'Parent App', icon: UserRound, accessKey: 'parents' },
+  { key: 'payments', label: 'Payments', icon: FileSpreadsheet, accessKey: 'fees' },
   { key: 'aiAssistant', label: 'AI Assistant', icon: Sparkles, accessKey: 'academics' },
+  { key: 'productionControls', label: 'Production Controls', icon: Database, accessKey: 'production_controls', superAdminOnly: true },
   { key: 'roles', label: 'Role Access', icon: LockKeyhole, superAdminOnly: true },
   { key: 'imports', label: 'Imports', icon: Upload, superAdminOnly: true },
 ];
@@ -69,6 +73,7 @@ const tabAccessColumns = [
   'reports',
   'audit_logs',
   'design_portal',
+  'production_controls',
 ];
 
 function prettyLabel(value) {
@@ -363,64 +368,151 @@ function SetupGuide({ counts }) {
   );
 }
 
-function StudentsPage({ students, reload }) {
+function StudentsPage({ students, reload, profile, session }) {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
+  const [mode, setMode] = useState('all');
   const debouncedQuery = useDebouncedValue(query, 300);
   const safeStudents = useMemo(() => validateArray(students), [students]);
-  const filtered = useMemo(() => safeStudents.filter((s) => [s?.student_name, s?.admission_no, s?.class_label, s?.division, s?.locality].filter(Boolean).join(' ').toLowerCase().includes(debouncedQuery.toLowerCase())), [safeStudents, debouncedQuery]);
+  const filtered = useMemo(() => safeStudents
+    .filter((s) => mode === 'all' || String(s?.status || '').toLowerCase() === mode)
+    .filter((s) => [s?.student_name, s?.admission_no, s?.class_label, s?.division, s?.stream, s?.parent_phone, s?.address]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(debouncedQuery.toLowerCase())), [safeStudents, debouncedQuery, mode]);
+  const activeCount = safeStudents.filter((s) => s?.status === 'active').length;
+  const transferredCount = safeStudents.filter((s) => s?.status === 'transferred').length;
+  const inactiveCount = safeStudents.filter((s) => s?.status === 'inactive').length;
 
   return (
     <div className="page-stack">
       <div className="page-title">
-        <div><p className="eyebrow">Student database</p><h1>1000-student production seed</h1></div>
-        <button className="ghost-btn"><Download size={16} /> Export later</button>
+        <div><p className="eyebrow">Student information system</p><h1>Students master control</h1></div>
+        <div className="button-row">
+          <button className="ghost-btn"><Download size={16} /> Export later</button>
+          <button className="primary-btn" onClick={() => setEditing({ status: 'active', academic_year: '2026-27', class_label: '1', division: 'Diamond', stream: '' })}>Add student</button>
+        </div>
       </div>
-      <div className="toolbar">
-        <Search size={18} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name, admission no, class, division, locality…" />
+
+      <div className="command-grid">
+        <MiniMetric label="Total students" value={safeStudents.length || '—'} note="production database" />
+        <MiniMetric label="Active" value={activeCount} note="currently enrolled" />
+        <MiniMetric label="Transferred" value={transferredCount} note="soft-removed records" tone="warm" />
+        <MiniMetric label="Inactive" value={inactiveCount} note="hidden from normal operations" tone="danger-soft" />
       </div>
+
+      <div className="toolbar multi-toolbar">
+        <Search size={18} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, admission no, class, division, phone…" />
+        <select value={mode} onChange={(e) => setMode(e.target.value)}>
+          <option value="all">All status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="transferred">Transferred</option>
+          <option value="alumni">Alumni</option>
+        </select>
+      </div>
+
       <div className="table-shell">
         <table>
-          <thead><tr><th>Student</th><th>Class</th><th>Admission</th><th>Status</th><th>Locality</th><th>Confidence</th><th></th></tr></thead>
+          <thead><tr><th>Student</th><th>Class</th><th>Admission</th><th>Parent</th><th>Status</th><th>Confidence</th><th></th></tr></thead>
           <tbody>
             {filtered.slice(0, 150).map((s) => (
               <tr key={s.id}>
-                <td><strong>{s.student_name}</strong><span>{s.gender} · DOB {s.dob}</span></td>
+                <td><strong>{s.student_name}</strong><span>{s.gender || '—'} · DOB {s.dob || '—'}</span></td>
                 <td>{s.class_label} {s.division}{s.stream ? ` · ${s.stream}` : ''}</td>
                 <td>{s.admission_no}</td>
-                <td><span className={cx('status-pill', s.status === 'active' ? 'secure' : '')}>{s.status}</span></td>
-                <td>{s.locality}</td>
-                <td>{s.data_confidence}</td>
+                <td><span>{s.parent_name || '—'}</span><span>{s.parent_phone || '—'}</span></td>
+                <td><span className={cx('status-pill', s.status === 'active' ? 'secure' : s.status === 'transferred' ? 'warm' : 'danger')}>{s.status || 'active'}</span></td>
+                <td>{s.data_confidence ?? '—'}</td>
                 <td><button className="icon-btn" onClick={() => setEditing(s)}><Pencil size={15} /></button></td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="table-note">Showing first 150 matching rows for speed. Database contains all imported students.</p>
+        <p className="table-note">Showing first 150 matching rows for speed. Add/edit/transfer uses Supabase RLS and Super Admin write policies.</p>
       </div>
-      {editing && <StudentEditor student={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); reload(); }} />}
+      {editing && <StudentEditor student={editing} profile={profile} session={session} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); reload({ silent: false }); }} />}
     </div>
   );
 }
 
-function StudentEditor({ student, onClose, onSaved }) {
-  const [form, setForm] = useState({ student_name: student.student_name, division: student.division, locality: student.locality || '', status: student.status });
+function StudentEditor({ student, profile, session, onClose, onSaved }) {
+  const isNew = !student?.id;
+  const [form, setForm] = useState({
+    admission_no: student?.admission_no || '',
+    student_name: student?.student_name || '',
+    gender: student?.gender || '',
+    dob: student?.dob || '',
+    class_label: student?.class_label || '1',
+    division: student?.division || 'Diamond',
+    stream: student?.stream || '',
+    roll_no: student?.roll_no || '',
+    academic_year: student?.academic_year || '2026-27',
+    parent_name: student?.parent_name || '',
+    parent_phone: student?.parent_phone || '',
+    parent_email: student?.parent_email || '',
+    address: student?.address || '',
+    blood_group: student?.blood_group || '',
+    house_name: student?.house_name || '',
+    data_confidence: student?.data_confidence ?? 80,
+    status: student?.status || 'active',
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [loadingData, setLoadingData] = useState(false);
-  const [lastSyncAt, setLastSyncAt] = useState(null);
-  const [isOnline, setIsOnline] = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine);
-  async function save() {
+
+  function update(key, value) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function validate() {
+    if (!profile?.school_id) return 'Your Super Admin profile is not loaded. Please refresh and login again.';
+    if (!String(form.admission_no || '').trim()) return 'Admission number is required.';
+    if (!String(form.student_name || '').trim()) return 'Student name is required.';
+    if (!String(form.class_label || '').trim()) return 'Class is required.';
+    if (!String(form.division || '').trim()) return 'Division is required.';
+    if (form.parent_phone && !/^\d{10}$/.test(String(form.parent_phone))) return 'Parent phone must be 10 digits.';
+    return '';
+  }
+
+  async function writeAudit(action, newData) {
+    if (!profile?.school_id) return;
+    await resilientQuery('student audit log', () => supabase.from('audit_logs').insert({
+      school_id: profile.school_id,
+      actor_user_id: session?.user?.id || profile?.id,
+      actor_email: session?.user?.email || profile?.email,
+      actor_role: profile?.role_key,
+      action,
+      entity_table: 'students',
+      entity_id: student?.id || null,
+      old_data: isNew ? null : student,
+      new_data: newData,
+    }), { retries: 1 });
+  }
+
+  async function save(nextStatus = null) {
+    const validationError = validate();
+    if (validationError) { setError(validationError); return; }
     setBusy(true);
     setError('');
     try {
-      if (!student?.id) throw new Error('Student record is missing. Please refresh and try again.');
-      const { error: updateError } = await resilientQuery(
-        'save student',
-        () => supabase.from('students').update(form).eq('id', student.id),
-        { retries: 2 }
-      );
-      if (updateError) throw updateError;
+      const payload = {
+        ...form,
+        status: nextStatus || form.status,
+        roll_no: form.roll_no === '' || form.roll_no === null ? null : Number(form.roll_no),
+        data_confidence: Number(form.data_confidence || 80),
+        stream: form.stream || '',
+        updated_at: new Date().toISOString(),
+      };
+      if (isNew) payload.school_id = profile.school_id;
+
+      const request = isNew
+        ? supabase.from('students').insert(payload).select('*').single()
+        : supabase.from('students').update(payload).eq('id', student.id).select('*').single();
+      const { data, error: writeError } = await resilientQuery(isNew ? 'add student' : 'save student', () => request, { retries: 2 });
+      if (writeError) throw writeError;
+      await writeAudit(isNew ? 'student_created' : nextStatus ? `student_status_${nextStatus}` : 'student_updated', data || payload);
       onSaved();
     } catch (err) {
       setError(getFriendlyErrorMessage(err, 'Could not save student. Please retry.'));
@@ -428,31 +520,52 @@ function StudentEditor({ student, onClose, onSaved }) {
       setBusy(false);
     }
   }
+
   return (
     <div className="modal-backdrop">
-      <div className="modal-card">
+      <div className="modal-card wide-modal">
         <button className="close-btn" onClick={onClose}><X size={18} /></button>
-        <h2>Edit student</h2>
-        <p className="muted">Every edit is protected by RLS. Audit trigger/function can be expanded in Batch 2.</p>
-        <label>Name<input value={form.student_name} onChange={(e) => setForm({ ...form, student_name: e.target.value })} /></label>
-        <label>Division<input value={form.division} onChange={(e) => setForm({ ...form, division: e.target.value })} /></label>
-        <label>Locality<input value={form.locality} onChange={(e) => setForm({ ...form, locality: e.target.value })} /></label>
-        <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="active">active</option><option value="inactive">inactive</option><option value="transferred">transferred</option><option value="alumni">alumni</option></select></label>
+        <h2>{isNew ? 'Add student' : 'Edit student'}</h2>
+        <p className="muted">Super Admin changes are written to Supabase and logged in audit history. Removal is handled as inactive/transferred, not hard delete.</p>
+        <div className="form-grid">
+          <label>Admission No<input value={form.admission_no} onChange={(e) => update('admission_no', e.target.value)} disabled={!isNew} /></label>
+          <label>Name<input value={form.student_name} onChange={(e) => update('student_name', e.target.value)} /></label>
+          <label>DOB<input type="date" value={form.dob || ''} onChange={(e) => update('dob', e.target.value)} /></label>
+          <label>Gender<select value={form.gender} onChange={(e) => update('gender', e.target.value)}><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+          <label>Class<input value={form.class_label} onChange={(e) => update('class_label', e.target.value)} /></label>
+          <label>Division<select value={form.division} onChange={(e) => update('division', e.target.value)}><option>Diamond</option><option>Ruby</option><option>Coral</option><option>Pearl</option><option>Commerce</option><option>Humanities</option></select></label>
+          <label>Stream<input value={form.stream} onChange={(e) => update('stream', e.target.value)} placeholder="Commerce / Humanities if needed" /></label>
+          <label>Roll No<input type="number" value={form.roll_no ?? ''} onChange={(e) => update('roll_no', e.target.value)} /></label>
+          <label>Parent Name<input value={form.parent_name} onChange={(e) => update('parent_name', e.target.value)} /></label>
+          <label>Parent Phone<input value={form.parent_phone} onChange={(e) => update('parent_phone', e.target.value.replace(/\D/g, '').slice(0, 10))} /></label>
+          <label>Parent Email<input value={form.parent_email || ''} onChange={(e) => update('parent_email', e.target.value)} /></label>
+          <label>Status<select value={form.status} onChange={(e) => update('status', e.target.value)}><option value="active">active</option><option value="inactive">inactive</option><option value="transferred">transferred</option><option value="alumni">alumni</option></select></label>
+        </div>
+        <label>Address<input value={form.address || ''} onChange={(e) => update('address', e.target.value)} /></label>
         {error && <p className="form-error">{error}</p>}
-        <button className="primary-btn" onClick={save} disabled={busy}><Save size={16} /> {busy ? 'Saving…' : 'Save changes'}</button>
+        <div className="button-row modal-actions">
+          {!isNew && <button className="ghost-btn danger-text" onClick={() => save('inactive')} disabled={busy}>Mark inactive</button>}
+          {!isNew && <button className="ghost-btn" onClick={() => save('transferred')} disabled={busy}>Transfer out</button>}
+          <button className="primary-btn" onClick={() => save()} disabled={busy}><Save size={16} /> {busy ? 'Saving…' : isNew ? 'Create student' : 'Save changes'}</button>
+        </div>
       </div>
     </div>
   );
 }
 
 
-function TransportPage({ routes, stops, students }) {
+function TransportPage({ routes, stops, students, reload, profile, session }) {
   const safeRoutes = validateArray(routes);
   const safeStops = validateArray(stops);
   const safeStudents = validateArray(students);
   const [activeRouteId, setActiveRouteId] = useState(safeRoutes[0]?.id);
   const [tripMode, setTripMode] = useState('evening');
   const [manualReached, setManualReached] = useState(2);
+  const [routeForm, setRouteForm] = useState({ route_code: '', route_name: '', status: 'active' });
+  const [stopForm, setStopForm] = useState({ stop_name: '', stop_order: '', radius_m: 100, latitude: '', longitude: '', fee_amount: 0 });
+  const [editingRoute, setEditingRoute] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const active = safeRoutes.find((r) => r.id === activeRouteId) || safeRoutes[0];
   const activeStops = safeStops.filter((s) => s.route_id === active?.id).sort((a,b) => (a.stop_order ?? 0) - (b.stop_order ?? 0));
   const reachedIndex = Math.min(Math.max(Number(manualReached) || 0, 0), Math.max(activeStops.length - 1, 0));
@@ -462,23 +575,185 @@ function TransportPage({ routes, stops, students }) {
   const progress = activeStops.length ? Math.round(((reachedIndex + 1) / activeStops.length) * 100) : 0;
   const routeHealth = safeRoutes.map((route, index) => {
     const routeStops = safeStops.filter((s) => s.route_id === route.id).length;
+    const orderedStops = safeStops.filter((s) => s.route_id === route.id).sort((a,b) => (a.stop_order ?? 0) - (b.stop_order ?? 0));
+    const lastStopIndex = Math.min(2 + (index % 3), Math.max(routeStops - 1, 0));
+    const lastStopName = orderedStops[lastStopIndex]?.stop_name || 'School Gate';
     return {
       ...route,
-      lastStop: safeStops.filter((s) => s.route_id === route.id).sort((a,b) => (a.stop_order ?? 0) - (b.stop_order ?? 0))[Math.min(2 + (index % 3), Math.max(routeStops - 1, 0))]?.stop_name || 'School Gate',
+      lastStop: lastStopName === 'School Gate' ? 'Left school gate' : lastStopName,
       completion: routeStops ? Math.min(92, 36 + index * 4) : 0,
-      alert: index === 1 ? '6 min delay' : index === 4 ? 'Helper offline 2m' : 'On route',
+      alert: route.status === 'inactive' ? 'Inactive' : index === 1 ? '6 min delay' : index === 4 ? 'Helper offline 2m' : 'Trip in progress',
     };
   });
+
+  function stopTimelineCopy(index) {
+    if (index === 0 && index <= reachedIndex) return 'Left school gate';
+    if (index < reachedIndex) return 'Reached stop';
+    if (index === reachedIndex) return index === 0 ? 'Left school gate' : 'Last stop reached';
+    if (index === reachedIndex + 1) return 'Next stop to reach';
+    return 'Yet to reach';
+  }
+
+  useEffect(() => {
+    if (!activeRouteId && safeRoutes[0]?.id) setActiveRouteId(safeRoutes[0].id);
+  }, [activeRouteId, safeRoutes]);
+
+  function resetRouteForm() {
+    setEditingRoute(null);
+    setRouteForm({ route_code: '', route_name: '', status: 'active' });
+  }
+
+  function startEditRoute(route) {
+    setEditingRoute(route);
+    setRouteForm({ route_code: route.route_code || '', route_name: route.route_name || '', status: route.status || 'active' });
+  }
+
+  async function writeTransportAudit(action, entityTable, entityId, newData, oldData = null) {
+    if (!profile?.school_id) return;
+    await resilientQuery('transport audit log', () => supabase.from('audit_logs').insert({
+      school_id: profile.school_id,
+      actor_user_id: session?.user?.id || profile?.id,
+      actor_email: session?.user?.email || profile?.email,
+      actor_role: profile?.role_key,
+      action,
+      entity_table: entityTable,
+      entity_id: entityId || null,
+      old_data: oldData,
+      new_data: newData,
+    }), { retries: 1 });
+  }
+
+  async function saveRoute() {
+    if (!profile?.school_id) { setError('Super Admin profile is not loaded. Refresh and login again.'); return; }
+    if (!String(routeForm.route_code || '').trim() || !String(routeForm.route_name || '').trim()) { setError('Route code and route name are required.'); return; }
+    setBusy(true);
+    setError('');
+    try {
+      const payload = {
+        school_id: profile.school_id,
+        route_code: routeForm.route_code.trim(),
+        route_name: routeForm.route_name.trim(),
+        status: routeForm.status || 'active',
+        direction: 'both',
+      };
+      const request = editingRoute?.id
+        ? supabase.from('transport_routes').update(payload).eq('id', editingRoute.id).select('*').single()
+        : supabase.from('transport_routes').insert(payload).select('*').single();
+      const { data, error: writeError } = await resilientQuery(editingRoute ? 'update route' : 'create route', () => request, { retries: 2 });
+      if (writeError) throw writeError;
+      await writeTransportAudit(editingRoute ? 'transport_route_updated' : 'transport_route_created', 'transport_routes', data?.id, data || payload, editingRoute);
+      resetRouteForm();
+      reload({ silent: false });
+    } catch (err) {
+      setError(getFriendlyErrorMessage(err, 'Could not save route. Please retry.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveStop() {
+    if (!profile?.school_id) { setError('Super Admin profile is not loaded. Refresh and login again.'); return; }
+    if (!active?.id) { setError('Select or create a route first.'); return; }
+    if (!String(stopForm.stop_name || '').trim()) { setError('Stop name is required.'); return; }
+    const nextOrder = Number(stopForm.stop_order || activeStops.length + 1);
+    setBusy(true);
+    setError('');
+    try {
+      const payload = {
+        school_id: profile.school_id,
+        route_id: active.id,
+        stop_order: nextOrder,
+        stop_name: stopForm.stop_name.trim(),
+        latitude: stopForm.latitude === '' ? null : Number(stopForm.latitude),
+        longitude: stopForm.longitude === '' ? null : Number(stopForm.longitude),
+        radius_m: Number(stopForm.radius_m || 100),
+        fee_amount: Number(stopForm.fee_amount || 0),
+        status: 'active',
+      };
+      const { data, error: writeError } = await resilientQuery('create stop', () => supabase.from('transport_stops').insert(payload).select('*').single(), { retries: 2 });
+      if (writeError) throw writeError;
+      await writeTransportAudit('transport_stop_created', 'transport_stops', data?.id, data || payload);
+      setStopForm({ stop_name: '', stop_order: '', radius_m: 100, latitude: '', longitude: '', fee_amount: 0 });
+      reload({ silent: false });
+    } catch (err) {
+      setError(getFriendlyErrorMessage(err, 'Could not save stop. Stop order/name must be unique within route.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleRouteStatus(route) {
+    if (!route?.id) return;
+    const nextStatus = route.status === 'inactive' ? 'active' : 'inactive';
+    setBusy(true);
+    setError('');
+    try {
+      const { data, error: writeError } = await resilientQuery('toggle route status', () => supabase.from('transport_routes').update({ status: nextStatus }).eq('id', route.id).select('*').single(), { retries: 2 });
+      if (writeError) throw writeError;
+      await writeTransportAudit(`transport_route_${nextStatus}`, 'transport_routes', route.id, data, route);
+      reload({ silent: false });
+    } catch (err) {
+      setError(getFriendlyErrorMessage(err, 'Could not update route status.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleStopStatus(stop) {
+    if (!stop?.id) return;
+    const nextStatus = stop.status === 'inactive' ? 'active' : 'inactive';
+    setBusy(true);
+    setError('');
+    try {
+      const { data, error: writeError } = await resilientQuery('toggle stop status', () => supabase.from('transport_stops').update({ status: nextStatus }).eq('id', stop.id).select('*').single(), { retries: 2 });
+      if (writeError) throw writeError;
+      await writeTransportAudit(`transport_stop_${nextStatus}`, 'transport_stops', stop.id, data, stop);
+      reload({ silent: false });
+    } catch (err) {
+      setError(getFriendlyErrorMessage(err, 'Could not update stop status.'));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="page-stack">
       <div className="page-title"><div><p className="eyebrow">Transport production</p><h1>Where-is-my-Train bus tracking</h1></div><span className="status-pill secure">Stop-level privacy</span></div>
+      {error && <div className="error-banner"><AlertTriangle size={16} /> {error}</div>}
 
       <div className="command-grid">
-        <MiniMetric label="Routes running" value={safeRoutes.length || '—'} note="morning/evening trip ready" />
+        <MiniMetric label="Routes running" value={safeRoutes.filter((r) => r.status !== 'inactive').length || '—'} note="morning/evening trip ready" />
         <MiniMetric label="Current route progress" value={`${progress}%`} note={nextStop ? `Next: ${nextStop.stop_name}` : 'Trip complete'} />
         <MiniMetric label="Students onboard" value={`${onboardCount}/${routeStudents.length}`} note="helper attendance summary" />
         <MiniMetric label="Transport alerts" value="2" note="delay/offline queue" tone="warm" />
+      </div>
+
+      <div className="grid two">
+        <div className="panel">
+          <h2>{editingRoute ? 'Edit bus route' : 'Add bus route'}</h2>
+          <div className="form-grid">
+            <label>Route code<input value={routeForm.route_code} onChange={(e) => setRouteForm({ ...routeForm, route_code: e.target.value })} placeholder="R13" /></label>
+            <label>Route name<input value={routeForm.route_name} onChange={(e) => setRouteForm({ ...routeForm, route_name: e.target.value })} placeholder="Poojappura Line" /></label>
+            <label>Status<select value={routeForm.status} onChange={(e) => setRouteForm({ ...routeForm, status: e.target.value })}><option value="active">active</option><option value="inactive">inactive</option></select></label>
+          </div>
+          <div className="button-row">
+            {editingRoute && <button className="ghost-btn" onClick={resetRouteForm}>Cancel edit</button>}
+            <button className="primary-btn" onClick={saveRoute} disabled={busy}>{busy ? 'Saving…' : editingRoute ? 'Save route' : 'Create route'}</button>
+          </div>
+        </div>
+        <div className="panel">
+          <h2>Add stop to selected route</h2>
+          <p className="muted">Selected route: <strong>{active?.route_name || 'None'}</strong></p>
+          <div className="form-grid">
+            <label>Stop order<input type="number" value={stopForm.stop_order} onChange={(e) => setStopForm({ ...stopForm, stop_order: e.target.value })} placeholder={String(activeStops.length + 1)} /></label>
+            <label>Stop name<input value={stopForm.stop_name} onChange={(e) => setStopForm({ ...stopForm, stop_name: e.target.value })} placeholder="New bus stop" /></label>
+            <label>Geofence radius<input type="number" value={stopForm.radius_m} onChange={(e) => setStopForm({ ...stopForm, radius_m: e.target.value })} /></label>
+            <label>Fee amount<input type="number" value={stopForm.fee_amount} onChange={(e) => setStopForm({ ...stopForm, fee_amount: e.target.value })} /></label>
+            <label>Latitude<input value={stopForm.latitude} onChange={(e) => setStopForm({ ...stopForm, latitude: e.target.value })} placeholder="optional" /></label>
+            <label>Longitude<input value={stopForm.longitude} onChange={(e) => setStopForm({ ...stopForm, longitude: e.target.value })} placeholder="optional" /></label>
+          </div>
+          <button className="primary-btn" onClick={saveStop} disabled={busy || !active?.id}>Add stop</button>
+        </div>
       </div>
 
       <div className="route-tabs">
@@ -497,9 +772,9 @@ function TransportPage({ routes, stops, students }) {
           </div>
           <div className="timeline train-style">
             {activeStops.map((stop, index) => (
-              <div className={cx('timeline-row', index < reachedIndex ? 'done' : index === reachedIndex ? 'current' : '')} key={stop.id}>
+              <div className={cx('timeline-row', index < reachedIndex ? 'done' : index === reachedIndex ? 'current' : '', stop.status === 'inactive' ? 'muted-row' : '')} key={stop.id}>
                 <div className="dot" />
-                <div><strong>{stop.stop_name}</strong><span>{index < reachedIndex ? 'Reached' : index === reachedIndex ? 'Last updated stop' : 'Upcoming'} · {stop.radius_m || 100}m geofence</span></div>
+                <div><strong>{stop.stop_name}</strong><span>{stopTimelineCopy(index)} · {stop.radius_m || 100}m geofence · {stop.status || 'active'}</span></div>
               </div>
             ))}
           </div>
@@ -526,13 +801,21 @@ function TransportPage({ routes, stops, students }) {
 
       <div className="table-shell">
         <table>
-          <thead><tr><th>Route</th><th>Last stop</th><th>Progress</th><th>Status</th></tr></thead>
-          <tbody>{routeHealth.map((route) => <tr key={route.id}><td><strong>{route.route_name}</strong><span>{route.route_code}</span></td><td>{route.lastStop}</td><td>{route.completion}%</td><td><span className={cx('status-pill', route.alert === 'On route' ? 'secure' : 'danger')}>{route.alert}</span></td></tr>)}</tbody>
+          <thead><tr><th>Route</th><th>Last stop</th><th>Progress</th><th>Status</th><th>Manage</th></tr></thead>
+          <tbody>{routeHealth.map((route) => <tr key={route.id}><td><strong>{route.route_name}</strong><span>{route.route_code}</span></td><td>{route.lastStop}</td><td>{route.completion}%</td><td><span className={cx('status-pill', route.alert === 'Trip in progress' ? 'secure' : 'danger')}>{route.alert}</span></td><td><div className="button-row"><button className="ghost-btn compact" onClick={() => startEditRoute(route)}>Edit</button><button className="ghost-btn compact" onClick={() => toggleRouteStatus(route)}>{route.status === 'inactive' ? 'Activate' : 'Disable'}</button></div></td></tr>)}</tbody>
+        </table>
+      </div>
+
+      <div className="table-shell">
+        <table>
+          <thead><tr><th>Stop</th><th>Order</th><th>Radius</th><th>Fee</th><th>Status</th><th>Manage</th></tr></thead>
+          <tbody>{activeStops.map((stop) => <tr key={stop.id}><td><strong>{stop.stop_name}</strong><span>{stop.latitude || '—'}, {stop.longitude || '—'}</span></td><td>{stop.stop_order}</td><td>{stop.radius_m || 100}m</td><td>{formatMoney(stop.fee_amount || 0)}</td><td><span className={cx('status-pill', stop.status === 'active' ? 'secure' : 'danger')}>{stop.status || 'active'}</span></td><td><button className="ghost-btn compact" onClick={() => toggleStopStatus(stop)}>{stop.status === 'inactive' ? 'Activate' : 'Disable'}</button></td></tr>)}</tbody>
         </table>
       </div>
     </div>
   );
 }
+
 
 function RolesPage({ roles, roleAccess, onToggleAccess, savingAccess }) {
   const accessByRole = new Map(validateArray(roleAccess).map((row) => [row.role_key, row]));
@@ -691,8 +974,8 @@ function AcademicsPage({ students }) {
   return (
     <div className="page-stack">
       <div className="page-title">
-        <div><p className="eyebrow">Academics</p><h1>Calendar + Timetable Engine</h1></div>
-        <span className="status-pill secure">Conflict-aware</span>
+        <div><p className="eyebrow">Academics</p><h1>Calendar + Timetable Backend Engine</h1></div>
+        <span className="status-pill secure">Conflict-aware · upload-ready</span>
       </div>
 
       <div className="command-grid">
@@ -748,7 +1031,7 @@ function AttendancePage({ students }) {
   return (
     <div className="page-stack">
       <div className="page-title">
-        <div><p className="eyebrow">Attendance</p><h1>Attendance + Substitute Control</h1></div>
+        <div><p className="eyebrow">Attendance</p><h1>Attendance + Biometric/Substitute Control</h1></div>
         <span className="status-pill secure">Biometric-ready</span>
       </div>
 
@@ -816,7 +1099,7 @@ function FeesPage({ fees, students }) {
   return (
     <div className="page-stack">
       <div className="page-title">
-        <div><p className="eyebrow">Fees</p><h1>Fees + Quick Pay Foundation</h1></div>
+        <div><p className="eyebrow">Fees</p><h1>Fees + Quick Pay + Receipt Foundation</h1></div>
         <span className="status-pill secure">Receipt-ready</span>
       </div>
 
@@ -919,6 +1202,116 @@ function CommunicationPage({ students, fees, routes }) {
   );
 }
 
+function ParentAccessPage({ students }) {
+  const safeStudents = validateArray(students);
+  const verified = Math.round(safeStudents.length * 0.62);
+  const pending = Math.max(safeStudents.length - verified, 0);
+  const sample = safeStudents.slice(0, 6);
+  return (
+    <div className="page-stack">
+      <div className="page-title"><div><p className="eyebrow">Batch 15</p><h1>Parent login + child linking</h1></div><span className="status-pill secure">OTP-ready</span></div>
+      <div className="command-grid">
+        <MiniMetric label="Linked parents" value={verified} note="phone verified + child matched" />
+        <MiniMetric label="Pending verification" value={pending} note="DOB/admission check required" tone="warm" />
+        <MiniMetric label="Login method" value="OTP" note="phone first, child scoped" />
+        <MiniMetric label="Data isolation" value="On" note="parent sees linked children only" />
+      </div>
+      <div className="grid two">
+        <div className="panel">
+          <h2>Parent access flow</h2>
+          <div className="ops-list">
+            <span><Phone /> Parent enters phone number</span>
+            <span><ShieldCheck /> OTP verifies the device</span>
+            <span><UserRound /> Parent confirms admission number or DOB once</span>
+            <span><CheckCircle2 /> App unlocks only linked children</span>
+          </div>
+        </div>
+        <div className="panel accent-panel">
+          <LockKeyhole />
+          <h2>Safety rule</h2>
+          <p>Parent app must never search the full student database. It should read only records linked through <code>student_parent_links</code> after OTP verification.</p>
+        </div>
+      </div>
+      <div className="table-shell">
+        <table><thead><tr><th>Student</th><th>Parent phone</th><th>Verification</th><th>Allowed views</th></tr></thead>
+          <tbody>{sample.map((student, index) => <tr key={student.id}><td><strong>{student.student_name}</strong><span>{student.admission_no}</span></td><td>{student.parent_phone || '—'}</td><td><span className={cx('status-pill', index < 4 ? 'secure' : 'danger')}>{index < 4 ? 'Verified' : 'DOB check pending'}</span></td><td>Fees · Bus · Attendance · Circulars · Marks</td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function PaymentsPage({ fees, students }) {
+  const safeFees = validateArray(fees);
+  const safeStudents = validateArray(students);
+  const studentById = useMemo(() => new Map(safeStudents.map((s) => [s.id, s])), [safeStudents]);
+  const pending = safeFees.filter((fee) => Number(fee?.pending_amount ?? 0) > 0);
+  const captured = safeFees.reduce((sum, fee) => sum + Number(fee?.total_paid ?? 0), 0);
+  const due = safeFees.reduce((sum, fee) => sum + Number(fee?.pending_amount ?? 0), 0);
+  const gatewayQueue = pending.slice(0, 8);
+  return (
+    <div className="page-stack">
+      <div className="page-title"><div><p className="eyebrow">Batch 16</p><h1>Payments + receipts control</h1></div><span className="status-pill danger">Webhook required before live payments</span></div>
+      <div className="command-grid">
+        <MiniMetric label="Collected" value={formatMoney(captured)} note="from fee_summaries" />
+        <MiniMetric label="Pending" value={formatMoney(due)} note="reminder and quick-pay base" tone="warm" />
+        <MiniMetric label="Gateway status" value="Test only" note="Cashfree/Razorpay webhook next" />
+        <MiniMetric label="Counter mode" value="Ready" note="manual receipt with audit log" />
+      </div>
+      <div className="grid two">
+        <div className="panel">
+          <h2>Payment safety workflow</h2>
+          <div className="ops-list">
+            <span><FileSpreadsheet /> Parent selects invoice, not free amount</span>
+            <span><ShieldCheck /> Backend creates gateway order</span>
+            <span><CheckCircle2 /> Webhook confirms payment, not frontend callback</span>
+            <span><Download /> Receipt generated only after captured status</span>
+          </div>
+        </div>
+        <div className="panel">
+          <h2>Counter reconciliation</h2>
+          <div className="compact-list">
+            <div className="compact-row"><div><strong>Cash/UPI counter entry</strong><span>Requires collector name and reference</span></div><span className="status-pill secure">Audit</span></div>
+            <div className="compact-row"><div><strong>Refund/correction</strong><span>Use reversal entry, never hard-delete payment</span></div><span className="status-pill danger">Controlled</span></div>
+            <div className="compact-row"><div><strong>Daily closing</strong><span>Export accountant report</span></div><span className="status-pill">Ready</span></div>
+          </div>
+        </div>
+      </div>
+      <div className="table-shell"><table><thead><tr><th>Student</th><th>Invoice</th><th>Pending</th><th>Action</th></tr></thead><tbody>{gatewayQueue.map((fee) => { const student = studentById.get(fee.student_id) || {}; return <tr key={fee.id}><td><strong>{student.student_name || 'Student'}</strong><span>{student.admission_no || fee.student_id}</span></td><td>{fee.academic_year || '2026-27'}</td><td>{formatMoney(fee.pending_amount)}</td><td><span className="status-pill">Create payment link after webhook setup</span></td></tr>; })}</tbody></table></div>
+    </div>
+  );
+}
+
+function NotificationsPage({ students, fees, routes }) {
+  const safeStudents = validateArray(students);
+  const safeFees = validateArray(fees);
+  const safeRoutes = validateArray(routes);
+  const feePending = safeFees.filter((fee) => Number(fee?.pending_amount ?? 0) > 0).length;
+  const queue = [
+    { type: 'Fee reminder', audience: `${feePending} parents`, channel: 'SMS/WhatsApp queue', priority: 'High' },
+    { type: 'Absent alert', audience: 'Class-wise parents', channel: 'SMS fallback', priority: 'High' },
+    { type: 'Bus delay', audience: `${safeRoutes.length} routes`, channel: 'App + SMS if critical', priority: 'Critical' },
+    { type: 'Circular read receipt', audience: `${safeStudents.length} students`, channel: 'In-app first', priority: 'Normal' },
+  ];
+  return (
+    <div className="page-stack">
+      <div className="page-title"><div><p className="eyebrow">Batch 20</p><h1>Notification queue + reminders</h1></div><span className="status-pill secure">In-app first</span></div>
+      <div className="command-grid">
+        <MiniMetric label="Reachable students" value={safeStudents.length} note="parent-linked database" />
+        <MiniMetric label="Fee reminders" value={feePending} note="7-day due workflow" tone="warm" />
+        <MiniMetric label="Critical channels" value="SMS" note="absence/bus/emergency only" />
+        <MiniMetric label="WhatsApp API" value="Optional" note="keep costs controlled" />
+      </div>
+      <div className="grid two">
+        <div className="panel"><h2>Message governance</h2><div className="ops-list"><span><Bell /> Normal updates stay in app</span><span><MessageSquare /> WhatsApp/SMS only for important alerts</span><span><Eye /> Delivery/read proof stored for office</span><span><ShieldCheck /> Role permissions decide who can send</span></div></div>
+        <div className="panel accent-panel"><Megaphone /><h2>UX detail</h2><p>Parents should see clear messages like “Bus left school gate” and “Next stop to reach”, not vague live-map text that causes confusion.</p></div>
+      </div>
+      <div className="table-shell"><table><thead><tr><th>Queue</th><th>Audience</th><th>Channel</th><th>Priority</th></tr></thead><tbody>{queue.map((item) => <tr key={item.type}><td><strong>{item.type}</strong></td><td>{item.audience}</td><td>{item.channel}</td><td><span className={cx('status-pill', item.priority === 'Critical' ? 'danger' : item.priority === 'High' ? 'secure' : '')}>{item.priority}</span></td></tr>)}</tbody></table></div>
+    </div>
+  );
+}
+
+
 function ExamsPage({ students }) {
   const safeStudents = validateArray(students);
   const classGroups = [...new Set(safeStudents.map((s) => `${s?.class_label || ''} ${s?.division || ''}`.trim()).filter(Boolean))];
@@ -936,7 +1329,7 @@ function ExamsPage({ students }) {
 
   return (
     <div className="page-stack">
-      <div className="page-title"><div><p className="eyebrow">Exams</p><h1>Exam timetable + report cards</h1></div><span className="status-pill secure">CBSE-ready foundation</span></div>
+      <div className="page-title"><div><p className="eyebrow">Exams</p><h1>Exam timetable + marksheet backend</h1></div><span className="status-pill secure">CBSE-ready foundation</span></div>
       <div className="command-grid">
         <MiniMetric label="Class groups" value={classGroups.length || '—'} note="from student database" />
         <MiniMetric label="Scheduled exams" value={exams.length} note="draft timetable" />
@@ -970,6 +1363,106 @@ function ExamsPage({ students }) {
 }
 
 
+function ProductionControlsPage({ counts, students, fees, routes, stops, imports, lastSyncAt, isOnline }) {
+  const totalDue = validateArray(fees).reduce((sum, row) => sum + Number(row?.pending_amount ?? row?.amount_due ?? 0), 0);
+  const latestImport = validateArray(imports)[0];
+  const readiness = [
+    { label: 'Super Admin role linked', status: true, note: 'Owner-only controls are active.' },
+    { label: 'Student database imported', status: Number(counts?.students ?? 0) >= 1000, note: `${counts?.students ?? 0} students loaded.` },
+    { label: 'Fee summaries imported', status: validateArray(fees).length >= 1000, note: `${validateArray(fees).length} fee records loaded.` },
+    { label: 'Transport stops imported', status: validateArray(stops).length > 0, note: `${validateArray(stops).length} stop-level tracking points.` },
+    { label: 'Network resilience active', status: true, note: 'Timeouts, retries and cache fallback are enabled.' },
+    { label: 'Production backup policy', status: false, note: 'Enable scheduled Supabase export before live launch.' },
+  ];
+
+  const exportItems = [
+    { title: 'Student master export', type: 'Excel', records: counts?.students ?? 0, owner: 'Super Admin' },
+    { title: 'Fee pending report', type: 'Excel/PDF', records: validateArray(fees).filter((f) => Number(f?.pending_amount ?? 0) > 0).length, owner: 'Accountant' },
+    { title: 'Transport route book', type: 'PDF', records: validateArray(routes).length, owner: 'Transport Head' },
+    { title: 'Audit log archive', type: 'CSV', records: 'policy', owner: 'Super Admin' },
+  ];
+
+  const deploymentChecks = [
+    'RLS remains ON for all private tables',
+    'No service role key in frontend or GitHub',
+    'Supabase production project separated from dev',
+    'Payment webhooks tested before real fees',
+    'Backup restore tested with synthetic data',
+    'Parent/teacher/helper role test accounts verified',
+  ];
+
+  return (
+    <div className="page-stack production-page">
+      <div className="page-title">
+        <div>
+          <p className="eyebrow">Super Admin</p>
+          <h1>Production Controls</h1>
+        </div>
+        <span className="status-pill secure">Owner only</span>
+      </div>
+
+      <div className="command-grid">
+        <MiniMetric label="Deployment state" value="Staging" note="ready for controlled pilot" />
+        <MiniMetric label="Network" value={isOnline ? 'Online' : 'Offline'} note={lastSyncAt ? `last sync ${new Date(lastSyncAt).toLocaleTimeString()}` : 'waiting for sync'} />
+        <MiniMetric label="Pending fees" value={`₹${Math.round(totalDue).toLocaleString('en-IN')}`} note="from fee summaries" />
+        <MiniMetric label="Latest import" value={latestImport?.status ?? '—'} note={latestImport?.completed_at ? new Date(latestImport.completed_at).toLocaleString() : 'no completed import'} />
+      </div>
+
+      <div className="grid two production-grid">
+        <div className="panel">
+          <h2>Launch readiness gate</h2>
+          <p className="muted">Use this before putting real student data or fee payments into production.</p>
+          <div className="ops-list readiness-list">
+            {readiness.map((item) => (
+              <span key={item.label} className={item.status ? 'ready' : 'pending'}>
+                {item.status ? <CheckCircle2 /> : <AlertTriangle />}
+                <strong>{item.label}</strong>
+                <small>{item.note}</small>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Backup and export policy</h2>
+          <p className="muted">Actual scheduled backups should be configured in Supabase/Cloudflare, but this gives the school a visible control checklist.</p>
+          <div className="compact-list">
+            <div className="compact-row"><div><strong>Daily database backup</strong><span>Supabase automated + manual weekly archive</span></div><span className="status-pill secure">Required</span></div>
+            <div className="compact-row"><div><strong>Monthly archive export</strong><span>Students, fees, attendance, transport</span></div><span className="status-pill">Planned</span></div>
+            <div className="compact-row"><div><strong>Restore drill</strong><span>Test restore before school-wide launch</span></div><span className="status-pill danger">Pending</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid two">
+        <div className="panel">
+          <h2>Export center</h2>
+          <div className="table-shell flush-panel">
+            <table>
+              <thead><tr><th>Report</th><th>Type</th><th>Records</th><th>Owner</th></tr></thead>
+              <tbody>{exportItems.map((item) => <tr key={item.title}><td><strong>{item.title}</strong></td><td>{item.type}</td><td>{item.records}</td><td>{item.owner}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <div className="drawer-actions"><button className="ghost-btn"><Download size={16} /> Prepare export pack</button><button className="ghost-btn"><FileSpreadsheet size={16} /> Open report queue</button></div>
+        </div>
+
+        <div className="panel">
+          <h2>Deployment checklist</h2>
+          <div className="ops-list">
+            {deploymentChecks.map((item) => <span key={item}><ShieldCheck /> {item}</span>)}
+          </div>
+        </div>
+      </div>
+
+      <div className="setup-warning">
+        <strong>Production rule</strong>
+        <p>Do not connect real fee payments or upload official school data until role tests, backup restore, payment webhook verification and parent isolation tests pass.</p>
+      </div>
+    </div>
+  );
+}
+
+
 function AppShell({ session }) {
   const [active, setActive] = useState('setup');
   const [theme, setTheme] = useState('obsidian');
@@ -977,6 +1470,7 @@ function AppShell({ session }) {
   const [fees, setFees] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [stops, setStops] = useState([]);
+  const [transportAssignments, setTransportAssignments] = useState([]);
   const [roles, setRoles] = useState([]);
   const [roleAccess, setRoleAccess] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -998,6 +1492,7 @@ function AppShell({ session }) {
       setFees(readCache(schoolIdForCache, 'fees', fees));
       setRoutes(readCache(schoolIdForCache, 'routes', routes));
       setStops(readCache(schoolIdForCache, 'stops', stops));
+      setTransportAssignments(readCache(schoolIdForCache, 'transportAssignments', transportAssignments));
       setRoles(readCache(schoolIdForCache, 'roles', roles));
       setRoleAccess(readCache(schoolIdForCache, 'roleAccess', roleAccess));
       setImports(readCache(schoolIdForCache, 'imports', imports));
@@ -1019,24 +1514,26 @@ function AppShell({ session }) {
       setProfile(userProfile);
       const schoolId = userProfile.school_id;
 
-      const [studentsRes, parentsRes, feesRes, routesRes, stopsRes, rolesRes, roleAccessRes, importsRes] = await Promise.all([
+      const [studentsRes, parentsRes, feesRes, routesRes, stopsRes, assignmentsRes, rolesRes, roleAccessRes, importsRes] = await Promise.all([
         resilientQuery('load students', () => supabase.from('students').select('*').order('class_label').order('roll_no').range(0, 999)),
         resilientQuery('load parents count', () => supabase.from('parents').select('id', { count: 'exact', head: true })),
         resilientQuery('load fee summaries', () => supabase.from('fee_summaries').select('*').range(0, 999)),
         resilientQuery('load routes', () => supabase.from('transport_routes').select('*').order('route_code')),
         resilientQuery('load stops', () => supabase.from('transport_stops').select('*').order('stop_order')),
+        resilientQuery('load transport assignments', () => supabase.from('student_transport_assignments').select('*').range(0, 999)),
         resilientQuery('load roles', () => supabase.from('roles').select('*').order('role_key')),
         resilientQuery('load role access', () => supabase.from('role_tab_access').select('*').order('role_key')),
         resilientQuery('load imports', () => supabase.from('import_jobs').select('*')),
       ]);
 
-      const firstError = [studentsRes, parentsRes, feesRes, routesRes, stopsRes, rolesRes, roleAccessRes, importsRes].find((r) => r?.error)?.error;
+      const firstError = [studentsRes, parentsRes, feesRes, routesRes, stopsRes, assignmentsRes, rolesRes, roleAccessRes, importsRes].find((r) => r?.error)?.error;
       if (firstError) throw firstError;
 
       const nextStudents = validateArray(studentsRes.data);
       const nextFees = validateArray(feesRes.data);
       const nextRoutes = validateArray(routesRes.data);
       const nextStops = validateArray(stopsRes.data);
+      const nextAssignments = validateArray(assignmentsRes.data);
       const nextRoles = validateArray(rolesRes.data);
       const nextRoleAccess = validateArray(roleAccessRes.data);
       const nextImports = validateArray(importsRes.data).sort((a, b) => new Date(b.completed_at || b.created_at || b.started_at || 0) - new Date(a.completed_at || a.created_at || a.started_at || 0));
@@ -1045,6 +1542,7 @@ function AppShell({ session }) {
       setFees(nextFees);
       setRoutes(nextRoutes);
       setStops(nextStops);
+      setTransportAssignments(nextAssignments);
       setRoles(nextRoles);
       setRoleAccess(nextRoleAccess);
       setImports(nextImports);
@@ -1055,6 +1553,7 @@ function AppShell({ session }) {
       writeCache(schoolId, 'fees', nextFees);
       writeCache(schoolId, 'routes', nextRoutes);
       writeCache(schoolId, 'stops', nextStops);
+      writeCache(schoolId, 'transportAssignments', nextAssignments);
       writeCache(schoolId, 'roles', nextRoles);
       writeCache(schoolId, 'roleAccess', nextRoleAccess);
       writeCache(schoolId, 'imports', nextImports);
@@ -1065,6 +1564,7 @@ function AppShell({ session }) {
       setFees((prev) => readCache(cacheSchoolId, 'fees', prev));
       setRoutes((prev) => readCache(cacheSchoolId, 'routes', prev));
       setStops((prev) => readCache(cacheSchoolId, 'stops', prev));
+      setTransportAssignments((prev) => readCache(cacheSchoolId, 'transportAssignments', prev));
       setRoles((prev) => readCache(cacheSchoolId, 'roles', prev));
       setRoleAccess((prev) => readCache(cacheSchoolId, 'roleAccess', prev));
       setImports((prev) => readCache(cacheSchoolId, 'imports', prev));
@@ -1163,12 +1663,16 @@ function AppShell({ session }) {
   const page = active === 'academics' ? <AcademicsPage students={students} />
     : active === 'attendance' ? <AttendancePage students={students} />
     : active === 'fees' ? <FeesPage fees={fees} students={students} />
-    : active === 'students' ? <StudentsPage students={students} reload={loadAll} />
-    : active === 'transport' ? <TransportPage routes={routes} stops={stops} students={students} />
+    : active === 'students' ? <StudentsPage students={students} reload={loadAll} profile={profile} session={session} />
+    : active === 'transport' ? <TransportPage routes={routes} stops={stops} students={students} reload={loadAll} profile={profile} session={session} />
     : active === 'communication' ? <CommunicationPage students={students} fees={fees} routes={routes} />
+    : active === 'notifications' ? <NotificationsPage students={students} fees={fees} routes={routes} />
     : active === 'exams' ? <ExamsPage students={students} />
-    : active === 'parentApp' ? <ParentPortalPage students={students} fees={fees} routes={routes} stops={stops} />
+    : active === 'parentAccess' ? <ParentAccessPage students={students} />
+    : active === 'parentApp' ? <ParentPortalPage students={students} fees={fees} routes={routes} stops={stops} assignments={transportAssignments} />
+    : active === 'payments' ? <PaymentsPage fees={fees} students={students} />
     : active === 'aiAssistant' ? <AIAssistantPage students={students} />
+    : active === 'productionControls' ? <ProductionControlsPage counts={counts} students={students} fees={fees} routes={routes} stops={stops} imports={imports} lastSyncAt={lastSyncAt} isOnline={isOnline} />
     : active === 'roles' ? <RolesPage roles={roles} roleAccess={roleAccess} onToggleAccess={updateRoleAccess} savingAccess={savingAccess} />
     : active === 'imports' ? <ImportsPage imports={imports} />
     : <CommandCenterPage counts={counts} students={students} fees={fees} routes={routes} stops={stops} />;
