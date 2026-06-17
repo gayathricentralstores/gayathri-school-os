@@ -1,0 +1,10 @@
+batch,task,security_rule,status
+Batch 1,Create Supabase dev/staging/prod projects,Never use production data in dev,Pending
+Batch 1,"Create core schema: schools, users, roles, permissions, students, parents",RLS on private tables before real data,Pending
+Batch 1,Create Super Admin owner account,MFA required; only owner gets design/role access,Pending
+Batch 1,Implement role-permission checklist,Backend must enforce; UI hiding is not security,Pending
+Batch 1,Create audit_logs table and trigger/function plan,Every edit/export/payment change is logged,Pending
+Batch 1,Import this synthetic 1000-student dataset,Fake data only until RLS tests pass,Pending
+Batch 1,Build student CRUD with soft delete,No hard delete for students/fees/marks,Pending
+Batch 1,Build route-stop timeline tables,"Parents see stop-level tracking, not live location",Pending
+Batch 1,Export reports permission test,Only permitted roles can export,Pending

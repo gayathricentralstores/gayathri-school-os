@@ -1,0 +1,49 @@
+route_id,route_name,bus_no,driver,female_attendant,stop_order,stop_name,latitude_mock,longitude_mock,geofence_radius_m,parent_visible_status
+R01,Pullikkanakku Local,KL-29-GCS-01,Suresh Kumar,Anitha R,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R01,Pullikkanakku Local,KL-29-GCS-01,Suresh Kumar,Anitha R,2,NSS Junction Pullikkanakku,9.1718,76.5352,75,Stop-level timeline only
+R01,Pullikkanakku Local,KL-29-GCS-01,Suresh Kumar,Anitha R,3,Kuttitheruvu,9.1667,76.532,100,Stop-level timeline only
+R01,Pullikkanakku Local,KL-29-GCS-01,Suresh Kumar,Anitha R,4,South Monkuzhy,9.1608,76.5368,100,Stop-level timeline only
+R02,Kayamkulam Town Line,KL-29-GCS-02,Rajeev N,Mini S,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R02,Kayamkulam Town Line,KL-29-GCS-02,Rajeev N,Mini S,2,Kayamkulam KSRTC Bus Stand,9.1745,76.5008,100,Stop-level timeline only
+R02,Kayamkulam Town Line,KL-29-GCS-02,Rajeev N,Mini S,3,Kayamkulam Railway Station,9.1786,76.5049,100,Stop-level timeline only
+R02,Kayamkulam Town Line,KL-29-GCS-02,Rajeev N,Mini S,4,Peringala,9.1847,76.5033,100,Stop-level timeline only
+R03,Krishnapuram Line,KL-29-GCS-03,Biju K,Sheeja P,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R03,Krishnapuram Line,KL-29-GCS-03,Biju K,Sheeja P,2,Krishnapuram Palace Road,9.1587,76.5089,100,Stop-level timeline only
+R03,Krishnapuram Line,KL-29-GCS-03,Biju K,Sheeja P,3,Oachira Junction,9.132,76.5107,100,Stop-level timeline only
+R03,Krishnapuram Line,KL-29-GCS-03,Biju K,Sheeja P,4,Vavvakkavu,9.1211,76.5163,120,Stop-level timeline only
+R04,Kattanam Bharanikkavu Line,KL-29-GCS-04,Madhavan P,Latha S,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R04,Kattanam Bharanikkavu Line,KL-29-GCS-04,Madhavan P,Latha S,2,2nd Mile,9.1602,76.5515,100,Stop-level timeline only
+R04,Kattanam Bharanikkavu Line,KL-29-GCS-04,Madhavan P,Latha S,3,Bharanikkavu,9.16,76.5854,120,Stop-level timeline only
+R04,Kattanam Bharanikkavu Line,KL-29-GCS-04,Madhavan P,Latha S,4,Kattanam Bus Stop,9.1415,76.553,100,Stop-level timeline only
+R05,Mavelikkara Line,KL-29-GCS-05,Prasad M,Deepa V,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R05,Mavelikkara Line,KL-29-GCS-05,Prasad M,Deepa V,2,Power House Junction Mavelikkara,9.25,76.5406,100,Stop-level timeline only
+R05,Mavelikkara Line,KL-29-GCS-05,Prasad M,Deepa V,3,Mavelikkara Private Bus Stand,9.2594,76.5566,120,Stop-level timeline only
+R05,Mavelikkara Line,KL-29-GCS-05,Prasad M,Deepa V,4,Puthiyakavu,9.268,76.5663,100,Stop-level timeline only
+R06,Chettikulangara Line,KL-29-GCS-06,Vinod R,Jaya N,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R06,Chettikulangara Line,KL-29-GCS-06,Vinod R,Jaya N,2,Chettikulangara Temple Junction,9.2422,76.5228,120,Stop-level timeline only
+R06,Chettikulangara Line,KL-29-GCS-06,Vinod R,Jaya N,3,Erezha,9.2455,76.5303,100,Stop-level timeline only
+R06,Chettikulangara Line,KL-29-GCS-06,Vinod R,Jaya N,4,Kandiyoor,9.2634,76.5451,100,Stop-level timeline only
+R07,Haripad Cheppad Line,KL-29-GCS-07,Shibu V,Bindu K,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R07,Haripad Cheppad Line,KL-29-GCS-07,Shibu V,Bindu K,2,Cheppad Junction,9.2473,76.4616,120,Stop-level timeline only
+R07,Haripad Cheppad Line,KL-29-GCS-07,Shibu V,Bindu K,3,Haripad Town,9.2841,76.4569,120,Stop-level timeline only
+R07,Haripad Cheppad Line,KL-29-GCS-07,Shibu V,Bindu K,4,Muthukulam,9.2332,76.4638,100,Stop-level timeline only
+R08,Karunagappally Oachira Line,KL-29-GCS-08,Nandakumar S,Priya G,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R08,Karunagappally Oachira Line,KL-29-GCS-08,Nandakumar S,Priya G,2,Oachira Temple Junction,9.132,76.5107,120,Stop-level timeline only
+R08,Karunagappally Oachira Line,KL-29-GCS-08,Nandakumar S,Priya G,3,Vavvakkavu Junction,9.1211,76.5163,100,Stop-level timeline only
+R08,Karunagappally Oachira Line,KL-29-GCS-08,Nandakumar S,Priya G,4,Karunagappally Town,9.0547,76.5352,150,Stop-level timeline only
+R09,Kappil Krishnapuram Coast Line,KL-29-GCS-09,Anil Kumar,Sreedevi P,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R09,Kappil Krishnapuram Coast Line,KL-29-GCS-09,Anil Kumar,Sreedevi P,2,Kappil East,9.146,76.495,100,Stop-level timeline only
+R09,Kappil Krishnapuram Coast Line,KL-29-GCS-09,Anil Kumar,Sreedevi P,3,Puthuppally,9.1573,76.4789,100,Stop-level timeline only
+R09,Kappil Krishnapuram Coast Line,KL-29-GCS-09,Anil Kumar,Sreedevi P,4,Kayamkulam Lake Road,9.155,76.4655,120,Stop-level timeline only
+R10,Thamarakulam Line,KL-29-GCS-10,Satheesh K,Geetha V,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R10,Thamarakulam Line,KL-29-GCS-10,Satheesh K,Geetha V,2,Thamarakulam Junction,9.1785,76.5927,120,Stop-level timeline only
+R10,Thamarakulam Line,KL-29-GCS-10,Satheesh K,Geetha V,3,Charummoodu,9.1915,76.6032,120,Stop-level timeline only
+R10,Thamarakulam Line,KL-29-GCS-10,Satheesh K,Geetha V,4,Nooranad,9.1858,76.6262,120,Stop-level timeline only
+R11,Puthiyavila Kandalloor Line,KL-29-GCS-11,Rajan P,Reshma S,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R11,Puthiyavila Kandalloor Line,KL-29-GCS-11,Rajan P,Reshma S,2,Puthiyavila,9.204,76.4653,120,Stop-level timeline only
+R11,Puthiyavila Kandalloor Line,KL-29-GCS-11,Rajan P,Reshma S,3,Kandalloor,9.1976,76.4526,120,Stop-level timeline only
+R11,Puthiyavila Kandalloor Line,KL-29-GCS-11,Rajan P,Reshma S,4,Arattupuzha Road,9.2115,76.4301,120,Stop-level timeline only
+R12,Muthukulam Line,KL-29-GCS-12,Harikumar R,Soumya M,1,School Gate,9.175,76.54,50,Stop-level timeline only
+R12,Muthukulam Line,KL-29-GCS-12,Harikumar R,Soumya M,2,Muthukulam South,9.2265,76.4593,120,Stop-level timeline only
+R12,Muthukulam Line,KL-29-GCS-12,Harikumar R,Soumya M,3,Choolatheruvu,9.2301,76.4761,100,Stop-level timeline only
+R12,Muthukulam Line,KL-29-GCS-12,Harikumar R,Soumya M,4,Cheppad Railway Stop,9.246,76.4698,100,Stop-level timeline only

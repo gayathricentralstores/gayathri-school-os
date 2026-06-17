@@ -1,0 +1,18 @@
+Monthly production operating invoice - Gayathri School OS,,,
+Assumption,Value,Unit,Notes
+Students,1000,count,Synthetic batch-1 dataset size
+Online fee payments,700,transactions/month,Assumed for gateway estimate only
+Average online fee payment,3000,INR,Assumed average receipt value
+USD-INR used,95.2099,INR/USD,From current web source referenced in response
+,,,
+Line item,Qty/Basis,Monthly INR,Notes
+Supabase Pro database/backend,$25/month,2380.25,Base production plan
+Cloudflare Worker/edge functions allowance,$5/month,476.05,Only if separate Worker paid plan is used
+SMS OTP,"2,000 OTP x ₹0.25 + 18% GST",590.0,MSG91 OTP slab assumption
+SMS fallback alerts,"3,000 SMS x ₹0.25 + 18% GST",885.0,Fallback for failed WhatsApp/critical alerts
+WhatsApp platform,"Interakt ₹6,897/quarter + 18% GST / 3",2712.82,Platform subscription; pass-through Meta charges can vary
+Backup/monitoring allowance,fixed,1500,"External monitor, export jobs, storage buffer"
+Developer maintenance/support,fixed,25000,"Bug fixes, minor changes, backups, monthly reports, staff support"
+Fixed monthly operating subtotal,,33544.12,Excludes payment gateway MDR
+Razorpay payment gateway fee,"₹21,00,000 online volume x 2% + 18% GST",49560.0,Pass-through processing cost
+Estimated monthly total with payment gateway,,83104.12,"Use only if 700 x ₹3,000 payments happen online"

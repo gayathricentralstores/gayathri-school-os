@@ -1,0 +1,10 @@
+role,portal,example_access,editable_by_super_admin
+super_admin,Owner Console,"All tabs, design portal, roles, master data, exports, security",Only developer/owner
+school_admin,Admin Panel,"Students, calendar, timetable, notices, transport, reports based on checklist",Yes
+principal,Admin Panel,"Reports, approvals, marks publish, circulars, audit summaries",Yes
+accountant,Finance Panel,"Fees, receipts, counter payments, reconciliation, fee exports",Yes
+teacher,Teacher Portal,"Own subjects/classes, notes, marks entry if allowed",Yes
+class_teacher,Teacher Portal,"Own class attendance, class notices, remarks, parent communication",Yes
+transport_head,Transport Panel,"Routes, trips, helpers, delay reports, bus timeline dashboard",Yes
+bus_helper,Helper App,"Assigned route only, stop reach, boarded/dropped status",Yes
+parent,Parent App,"Own linked children only: fees, bus timeline, marks, notices",Yes

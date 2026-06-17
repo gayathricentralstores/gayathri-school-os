@@ -1,0 +1,22 @@
+{
+  "name": "gayathri-school-os-production-batch1",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "import:seed": "node scripts/import-batch1-seed.mjs",
+    "check:env": "node scripts/check-env.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "csv-parse": "latest",
+    "lucide-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {}
+}
